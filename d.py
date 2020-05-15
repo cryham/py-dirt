@@ -7,7 +7,7 @@ from utils import *
 from optparse import OptionParser
 
 
-#  args
+#  Options
 #---------------------------------------------
 op = OptionParser(description='Find duplicate files and delete. '+
     'Rename with added rating from duplicates count.') #, usage='',epilog='')
@@ -24,15 +24,16 @@ op.add_option('-a', '--across', dest='across',
 
 (opts, args) = op.parse_args()
 
-print('Args: test '+yn(opts.test)+', subdirs '+yn(opts.recursive)+
+print('Opt.: test '+yn(opts.test)+', subdirs '+yn(opts.recursive)+
       ', across '+yn(opts.across)+', size '+str(opts.size))
 
 
-#  start dir
+#  Start dir
 if opts.dir == '':
     start_dir = os.getcwd()
-    #start_dir += '/test-dirs/1'  # test
-    start_dir += '/test-dirs/2'  # test
+    #  test only, comment out
+    #start_dir += '/test-dirs/1'
+    start_dir += '/test-dirs/2'
 else:
     start_dir = opts.dir
 
@@ -40,8 +41,8 @@ else:
 print('---------------------------------------------')
 
 
-#  var
-file_list = list()  # all files
+#  Var
+file_list = list()   # all files
 file_count = dict()  # same file properties count for unique
 
 #  stats
@@ -53,7 +54,8 @@ class cstats:
     left_size = 0
 
 class cfile:
-    path = ''
+    fpath = ''  # full path with file
+    dir = ''  # just dir
     fne = ''
     ext = ''
     unique = True
@@ -62,10 +64,13 @@ class cfile:
 stats = cstats()
 
 
-#  process 1 file
+#  Process 1 file
 #---------------------------------------------
-def process_file(fpath, fname):
+def process_file(dir, fname):
     #print(fpath)
+    fpath = os.path.join(dir, fname)
+    if not os.path.isfile(fpath):
+        return
 
     fspl = os.path.splitext(fname)
     fne = fspl[0]  # fname no ext
@@ -101,7 +106,8 @@ def process_file(fpath, fname):
 
     #  cfile
     cf = cfile()
-    cf.path = fpath
+    cf.fpath = fpath
+    cf.dir = dir
     cf.fne = fne
     cf.ext = ext
     cf.size = size
@@ -121,17 +127,18 @@ def process_file(fpath, fname):
     return
 
 
-#  main get loop
+#  Main get loop
 #---------------------------------------------
 if not opts.recursive:
-    print(start_dir)  #+'/  ----')
+    print(start_dir)
     files = os.listdir(start_dir)
+
+    files.sort()
     for fname in files:
-        process_file(fpath, fname)
-        print(fname, start_dir)
+        process_file(start_dir, fname)
 else:
-    for root, subdirs, files in os.walk(start_dir):
-        print(root)  #+'/  ----')
+    for dir, subdirs, files in os.walk(start_dir):
+        print(dir)
         stats.all_dirs += 1
 
         #  each dir separate
@@ -140,15 +147,17 @@ else:
             file_list.clear
             file_count.clear
 
+        files.sort()
         for fname in files:
-            fpath = os.path.join(root, fname)
-            process_file(fpath, fname)
+            process_file(dir, fname)
 
 
 print('----- stats -----')
 print(' dirs:  ' + str(stats.all_dirs))
-print('files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + ' / ' + str(stats.all_files))
-print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str(stats.all_size) + ' B')
+if stats.all_files > 0:
+    print('files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + ' / ' + str(stats.all_files))
+if stats.all_size > 0:
+    print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str(stats.all_size) + ' B')
 print(' free:  '+str_size(stats.all_size - stats.left_size) + ' B')
 
 
@@ -159,7 +168,10 @@ if not opts.test:
     for f in file_list:
         unique_file = (f.fne, f.ext, f.size)  #, f.hash)
         count = file_count.get(unique_file, 0)
-        print(f.path)
-        #if not file.unique:
-        #  delete
-        pass
+        if not f.unique:  # delete
+            print(str(count)+' '+f.fpath)
+            #os.remove(f.path)
+        else:  # rename
+            os.path.split(f.fpath)
+            # dont rename to existing file
+            #os.rename(f.path, '`'+f.)

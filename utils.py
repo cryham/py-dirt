@@ -10,7 +10,7 @@ def yn(b):
     if b:
         return 'Yes'
     else:
-        return 'no'
+        return 'No'
 
 #  format size string
 #  e.g.  sep: 1'234,  kmg: 1k 234

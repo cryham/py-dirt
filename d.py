@@ -11,21 +11,24 @@ from optparse import OptionParser
 #---------------------------------------------
 op = OptionParser(description='Find duplicate files and delete. '+
     'Rename with added rating from duplicates count.') #, usage='',epilog='')
-op.add_option('-d', '--dir', dest='dir',
-                    help='Path. If not set, uses current', default='')
 op.add_option('-t', '--test', dest='test',
                     help='Test only and show stats', action='store_true', default=False)
+op.add_option('-l', '--nolist', dest='print_files',
+                    help='Don\'t list files only stats', action='store_false', default=True)
+
+op.add_option('-d', '--dir', dest='dir',
+                    help='Path. If not set, uses current', default='')
 op.add_option('-n', '--nosub', dest='recursive',
                     help='Don\'t check subdirs', action='store_false', default=True)
-op.add_option('-s', '--size', dest='size', type='int', default = -4096,
-                    help='Size to read, -1 full, 0 none, default -4096, - from end, + from beginning')
 op.add_option('-a', '--across', dest='across',
                     help='Test duplicates across dirs', action='store_true', default=False)
+op.add_option('-s', '--size', dest='size', type='int', default = -4096,
+                    help='Size to read, -1 full (slow), 0 none, default -4096, - from end, + from beginning')
 
 (opts, args) = op.parse_args()
 
-print('Opt.: test '+yn(opts.test)+', subdirs '+yn(opts.recursive)+
-      ', across '+yn(opts.across)+', size '+str(opts.size))
+print('Options:  test '+yn(opts.test)+'  list '+yn(opts.print_files))
+print('  subdirs '+yn(opts.recursive)+'  across '+yn(opts.across)+'  size '+str(opts.size))
 
 
 #  Start dir
@@ -34,6 +37,10 @@ if opts.dir == '':
     #  test only, comment out
     #start_dir += '/test-dirs/1'
     start_dir += '/test-dirs/2'
+    #start_dir += '/../dirtest/fmt'
+    #start_dir += '/../dirtest/zc'
+    #start_dir += '/../dirtest/zc2'
+    #start_dir += '/../dirtest/zi'
 else:
     start_dir = opts.dir
 
@@ -114,13 +121,16 @@ def process_file(dir, fname):
     cf.unique = unique
     
     #  file  info
-    #print(fne+'  s '+str(size)+' '+str(unique))
-    #print(fname+'  '+cf.fne+cf.ext+'  {:12d}'.format(cf.size)+'  u: '+str(unique))
-    if unique:
-        u = ' + '
-    else:
-        u = ' - '
-    print('{:9d}'.format(cf.size)+' '+u+fname)
+    #  align size right, unique +, fname
+    if opts.print_files:
+        #print(fne+'  s '+str(size)+' '+str(unique))
+        #print(fname+'  '+cf.fne+cf.ext+'  {:12d}'.format(cf.size)+'  u: '+str(unique))
+        if unique:
+            u = ' + '
+        else:
+            u = ' - '
+        print('{:>12}'.format(str_size(size)) +
+            ' ' + u + ' ' + fname)
 
     #  add
     file_list.append(cf)
@@ -157,8 +167,8 @@ print(' dirs:  ' + str(stats.all_dirs))
 if stats.all_files > 0:
     print('files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + ' / ' + str(stats.all_files))
 if stats.all_size > 0:
-    print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str(stats.all_size) + ' B')
-print(' free:  '+str_size(stats.all_size - stats.left_size) + ' B')
+    print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str_size(stats.all_size) + ' B')
+print(' free:  ' + str_size(stats.all_size - stats.left_size) + ' B')
 
 
 #  delete, rename files
@@ -169,7 +179,8 @@ if not opts.test:
         unique_file = (f.fne, f.ext, f.size)  #, f.hash)
         count = file_count.get(unique_file, 0)
         if not f.unique:  # delete
-            print(str(count)+' '+f.fpath)
+            if opts.print_files:
+                print(str(count)+' '+f.fpath)
             #os.remove(f.path)
         else:  # rename
             os.path.split(f.fpath)

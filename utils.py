@@ -14,7 +14,7 @@ def yn(b):
 
 #  format size string
 #  e.g.  sep: 1'234,  kmg: 1k 234
-def str_size(num, kmg=False, sep=False):
+def str_size(num, kmg=True, sep=False):
     s = ''
     i = 0
     d = int(num)

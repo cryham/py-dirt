@@ -1,37 +1,44 @@
 #!/usr/bin/python3
 #!/usr/bin/env python3
 import os
+import math
+import random
+from utils import *
 from optparse import OptionParser
 
 
 #  args
 #---------------------------------------------
-op = OptionParser(description='Find duplicates and delete, rename') #, usage='',epilog='')
-op.add_option("-d", "--dir", dest="dir",
-                    help="Path, if not set, uses current", default='')
-op.add_option("-t", "--test", dest="test",
-                    help="Test only", action="store_true", default=False)
-op.add_option("-s", "--size", dest="size", type="int", default=4096,
-                    help="Size to read, -1 full, 0 none, default 4kB")
-op.add_option("-a", "--across", dest="across",
-                    help="Test files across dirs", action="store_true", default=False)
+op = OptionParser(description='Find duplicate files and delete. '+
+    'Rename with added rating from duplicates count.') #, usage='',epilog='')
+op.add_option('-d', '--dir', dest='dir',
+                    help='Path. If not set, uses current', default='')
+op.add_option('-t', '--test', dest='test',
+                    help='Test only and show stats', action='store_true', default=False)
+op.add_option('-n', '--nosub', dest='recursive',
+                    help='Don\'t check subdirs', action='store_false', default=True)
+op.add_option('-s', '--size', dest='size', type='int', default = -4096,
+                    help='Size to read, -1 full, 0 none, default -4096, - from end, + from beginning')
+op.add_option('-a', '--across', dest='across',
+                    help='Test duplicates across dirs', action='store_true', default=False)
 
 (opts, args) = op.parse_args()
 
-print("Args: test %r" % opts.test,end='')
-print(", across %r" % opts.across,end='')
-print(", size %d" % opts.size)
+print('Args: test '+yn(opts.test)+', subdirs '+yn(opts.recursive)+
+      ', across '+yn(opts.across)+', size '+str(opts.size))
+
 
 #  start dir
 if opts.dir == '':
     start_dir = os.getcwd()
-    #start_dir += '/test-dirs/1'
-    start_dir += '/test-dirs/2'
+    #start_dir += '/test-dirs/1'  # test
+    start_dir += '/test-dirs/2'  # test
 else:
     start_dir = opts.dir
 
-print("Path: " + start_dir)
+#print('Path: ' + start_dir + 'recursive '+str(opts.recursive))
 print('---------------------------------------------')
+
 
 #  var
 file_list = list()  # all files
@@ -50,7 +57,7 @@ class cfile:
     fne = ''
     ext = ''
     unique = True
-    same_count = 0
+    #same_count = 0
 
 stats = cstats()
 
@@ -82,7 +89,7 @@ def process_file(fpath, fname):
 
     #  file properties needed to be different for being unique
     unique_file = (fne, ext, size)  #, hash)
-    in_count = file_count.get(unique_file,0)
+    in_count = file_count.get(unique_file, 0)
     file_count[unique_file] = in_count + 1  # inc count
 
     if in_count == 0:
@@ -100,9 +107,14 @@ def process_file(fpath, fname):
     cf.size = size
     cf.unique = unique
     
-    #  info
-    print(fname+'  '+cf.fne+cf.ext+'  s: '+str(cf.size)+'  u: '+str(unique))
+    #  file  info
     #print(fne+'  s '+str(size)+' '+str(unique))
+    #print(fname+'  '+cf.fne+cf.ext+'  {:12d}'.format(cf.size)+'  u: '+str(unique))
+    if unique:
+        u = ' + '
+    else:
+        u = ' - '
+    print('{:9d}'.format(cf.size)+' '+u+fname)
 
     #  add
     file_list.append(cf)
@@ -111,31 +123,43 @@ def process_file(fpath, fname):
 
 #  main get loop
 #---------------------------------------------
-for root, subdirs, files in os.walk(start_dir):
-    print(root+'/  ----')
-    stats.all_dirs += 1
-
-    #  each dir separate
-    #  don't clear for across dirs
-    if not opts.across:
-        file_list.clear
-        file_count.clear
-
+if not opts.recursive:
+    print(start_dir)  #+'/  ----')
+    files = os.listdir(start_dir)
     for fname in files:
-        fpath = os.path.join(root, fname)
         process_file(fpath, fname)
+        print(fname, start_dir)
+else:
+    for root, subdirs, files in os.walk(start_dir):
+        print(root)  #+'/  ----')
+        stats.all_dirs += 1
 
-    #print('-----')
+        #  each dir separate
+        #  don't clear for across dirs
+        if not opts.across:
+            file_list.clear
+            file_count.clear
+
+        for fname in files:
+            fpath = os.path.join(root, fname)
+            process_file(fpath, fname)
+
 
 print('----- stats -----')
 print(' dirs:  ' + str(stats.all_dirs))
 print('files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + ' / ' + str(stats.all_files))
-print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str(stats.left_size) + ' / ' + str(stats.all_size) + ' B')
+print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str(stats.all_size) + ' B')
+print(' free:  '+str_size(stats.all_size - stats.left_size) + ' B')
 
-#  delete files
+
+#  delete, rename files
 if not opts.test:
-    for file in file_list:
-        #print(file.path)
+    print('----- deleting')
+    
+    for f in file_list:
+        unique_file = (f.fne, f.ext, f.size)  #, f.hash)
+        count = file_count.get(unique_file, 0)
+        print(f.path)
         #if not file.unique:
         #  delete
         pass

@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 #!/usr/bin/env python3
 import os
-import math
-import random
-from utils import *
+import hashlib
 from optparse import OptionParser
+from utils import *
 
 
 #  Options
@@ -31,6 +30,17 @@ print('Options:  test '+yn(opts.test)+'  list '+yn(opts.print_files))
 print('  subdirs '+yn(opts.recursive)+'  across '+yn(opts.across)+'  size '+str(opts.size))
 
 
+#  hash
+#---------------------------------------------
+def gethash(file):
+    hasher = hashlib.md5()
+    with open(file, "rb") as f:
+        #if size < 0:
+        buf = f.read()  # (maxsize)
+        hasher.update(buf)
+    return hasher.hexdigest()
+
+
 #  Start dir
 if opts.dir == '':
     start_dir = os.getcwd()
@@ -53,22 +63,22 @@ file_list = list()   # all files
 file_count = dict()  # same file properties count for unique
 
 #  stats
-class cstats:
+class cStats:
     all_dirs = 0
     all_files = 0
-    left_files = 0  # left after deleting duplicates
     all_size = 0
+    left_files = 0  # left after deleting duplicates
     left_size = 0
 
-class cfile:
-    fpath = ''  # full path with file
-    dir = ''  # just dir
-    fne = ''
-    ext = ''
+class cFile:
+    fpath = '' # full path with file
+    dir = ''   # just dir path
+    fne = ''  # filename, no ext
+    ext = ''  # file extension
+    hash = ''  # hash from file contents
     unique = True
-    #same_count = 0
 
-stats = cstats()
+stats = cStats()
 
 
 #  Process 1 file
@@ -98,9 +108,14 @@ def process_file(dir, fname):
         fne = fnb
     #print('l '+str(l)+' r '+str(r))
     
+    #  get hash
+    if opts.size != 0:
+        hash = gethash(fpath)
+    else:
+        hash = 0
 
     #  file properties needed to be different for being unique
-    unique_file = (fne, ext, size)  #, hash)
+    unique_file = (fne, ext, size, hash)
     in_count = file_count.get(unique_file, 0)
     file_count[unique_file] = in_count + 1  # inc count
 
@@ -112,12 +127,13 @@ def process_file(dir, fname):
         unique = False
 
     #  cfile
-    cf = cfile()
+    cf = cFile()
     cf.fpath = fpath
     cf.dir = dir
     cf.fne = fne
     cf.ext = ext
     cf.size = size
+    cf.hash = hash
     cf.unique = unique
     
     #  file  info
@@ -176,7 +192,7 @@ if not opts.test:
     print('----- deleting')
     
     for f in file_list:
-        unique_file = (f.fne, f.ext, f.size)  #, f.hash)
+        unique_file = (f.fne, f.ext, f.size, f.hash)
         count = file_count.get(unique_file, 0)
         if not f.unique:  # delete
             if opts.print_files:

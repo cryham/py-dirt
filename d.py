@@ -6,60 +6,94 @@ from optparse import OptionParser
 from utils import *
 
 
+#---------------------------------------------
+test = False
+execute = True
+
+debug = True  # Dev Test
+#debug = False  # in Release !
+
+if debug:
+    #test = True  # force -t for testing only
+    execute = False  # don't execute
+
+
+# Ratings  chars sorted
+#   all :  } { ` _ ^ ] [ @ = ; . - , ) ( ' & % # " !
+#   used:  ` _ ^ - , ) ( ! 
+
+# prefixes for filename, with more duplicates
+#ratings = ['`','``','_','^','-',',',',,',')','(','!','!!','!!!']  # 12
+ratings = ['`','_','^','-',',',')','(','!','!!']  # 9
+
+
 #  Options
-#---------------------------------------------
-op = OptionParser(description='Find duplicate files and delete. '+
+#------------------------------------------------------------------------------------------
+op = OptionParser(description='Find and delete duplicated files. '+
     'Rename with added rating from duplicates count.') #, usage='',epilog='')
-op.add_option('-t', '--test', dest='test',
-                    help='Test only and show stats', action='store_true', default=False)
-op.add_option('-l', '--nolist', dest='print_files',
-                    help='Don\'t list files only stats', action='store_false', default=True)
 
-op.add_option('-d', '--dir', dest='dir',
-                    help='Path. If not set, uses current', default='')
-op.add_option('-n', '--nosub', dest='recursive',
-                    help='Don\'t check subdirs', action='store_false', default=True)
-op.add_option('-a', '--across', dest='across',
-                    help='Test duplicates across dirs', action='store_true', default=False)
-op.add_option('-s', '--size', dest='size', type='int', default = -4096,
-                    help='Size to read, -1 full (slow), 0 none, default -4096, - from end, + from beginning')
+def opt_bool(sh,long, dest,help, default):
+    if default:
+        op.add_option(sh,long, dest=dest, help=help, action='store_false', default=True)
+    else:
+        op.add_option(sh,long, dest=dest, help=help, action='store_true', default=False)
 
-(opts, args) = op.parse_args()
+opt_bool('-t', '--test', 'test', 'Test only and show stats', False)
+opt_bool('-o', '--opt',    'only',        'Only show options and quit', False)
+opt_bool('-l', '--nolist', 'print_files', 'Don\'t list files only stats', True)
+opt_bool('-x', '--noexec', 'noexecute',   'Don\'t excecute (delete or rename)', False)
 
-print('Options:  test '+yn(opts.test)+'  list '+yn(opts.print_files))
-print('  subdirs '+yn(opts.recursive)+'  across '+yn(opts.across)+'  size '+str(opts.size))
+op.add_option('-d', '--dir', dest='dir', help='Path. If not set, uses current', default='')
+opt_bool('-n', '--nosub', 'recursive',    'Don\'t check subdirs', True)
+opt_bool('-a', '--across', 'across',      'Test duplicates across dirs', False)
+op.add_option('-s', '--size', dest='h_size', type='int', default = -4096,
+            help='Size to read, -1 full (slow), 0 none, default -4096, - from end, + from beginning')
 
+opt_bool('-p', '--noprefix', 'prefix',
+            'Add prefix rating symbol, from duplicate count ` _ ^ - , ) ( ! !!', True)
+opt_bool('-u', '--suffix', 'suffix',      'Add suffix ratings (1)..(9)', False)
+op.add_option('-i', '--offset', dest='offset',
+            help='Offset value to add to rating count', type='int', default = 0)
 
-#  hash
-#---------------------------------------------
-def gethash(file):
-    hasher = hashlib.md5()
-    with open(file, "rb") as f:
-        #if size < 0:
-        buf = f.read()  # (maxsize)
-        hasher.update(buf)
-    return hasher.hexdigest()
+(opt, args) = op.parse_args()
+
+h_size = abs(opt.h_size)
+if opt.noexecute:
+    execute = False
+if opt.test:
+    test = True
+
+print('Options:  test '+yn(test)+'  execute '+yn(execute)+
+      '  list '+yn(opt.print_files)+'  prnt '+yn(opt.print_files))
+print('  subdirs '+yn(opt.recursive)+'  across '+yn(opt.across)+'  size '+str(opt.h_size))
+print('  pref '+yn(opt.prefix)+'  sufx '+yn(opt.suffix))
 
 
 #  Start dir
-if opts.dir == '':
+#---------------------------------------------
+if opt.dir == '':
     start_dir = os.getcwd()
-    #  test only, comment out
-    #start_dir += '/test-dirs/1'
-    start_dir += '/test-dirs/2'
-    #start_dir += '/../dirtest/fmt'
-    #start_dir += '/../dirtest/zc'
-    #start_dir += '/../dirtest/zc2'
-    #start_dir += '/../dirtest/zi'
-else:
-    start_dir = opts.dir
 
-#print('Path: ' + start_dir + 'recursive '+str(opts.recursive))
+    if debug:  #  test only
+        #start_dir += '/test-dirs/1'
+        start_dir += '/test-dirs/2'
+        #start_dir += '/../dirtest/fmt'
+        #start_dir += '/../dirtest/zc'
+        #start_dir += '/../dirtest/zc2'
+        #start_dir += '/../dirtest/zi'
+else:
+    start_dir = opt.dir
+
+if opt.only:
+    print('Path: ' + start_dir)
+    exit(0)
+
 print('---------------------------------------------')
 
 
 #  Var
-file_list = list()   # all files
+#---------------------------------------------
+file_list  = list()  # all files
 file_count = dict()  # same file properties count for unique
 
 #  stats
@@ -71,18 +105,39 @@ class cStats:
     left_size = 0
 
 class cFile:
-    fpath = '' # full path with file
-    dir = ''   # just dir path
-    fne = ''  # filename, no ext
-    ext = ''  # file extension
-    hash = ''  # hash from file contents
-    unique = True
+    def __init__(self, fpath, dir, fneu, fne, ext, size, hash):
+        self.fpath = fpath  # full path with file
+        self.dir = dir      # just dir path
+        self.fneu = fneu    # filename, no ext, no ratings for unique test
+        self.fne = fne      # filename, no ext
+        self.ext = ext      # file extension
+        self.size = size    # file size B
+        self.hash = hash    # hash from file contents, 0 if not used
+        self.unique = True
+    def unique_attrs(self):
+        # file properties needed to be different for being unique
+        return (self.fneu, self.ext, self.size, self.hash)
 
 stats = cStats()
 
 
-#  Process 1 file
+#  Hash
 #---------------------------------------------
+def get_hash(file):
+    hasher = hashlib.md5()
+    with open(file, "rb") as f:
+        if opt.h_size < -1:
+            f.seek(h_size, 2)
+        if opt.h_size == -1:  # read full
+            buf = f.read()
+        else:
+            buf = f.read(h_size)
+        hasher.update(buf)
+    return hasher.hexdigest()
+
+
+#  Process 1 file
+#------------------------------------------------------------------------------------------
 def process_file(dir, fname):
     #print(fpath)
     fpath = os.path.join(dir, fname)
@@ -98,26 +153,34 @@ def process_file(dir, fname):
     stats.all_size += size
     #print(fname + '  ' + str(size) + '  ' + fne + ' ' + ext)
 
-    #  find (n) in name
+    #  find (n) in name  --
     l = fne.rfind('(')
     r = fne.rfind(')')
+    fneu = fne
 
     if l+1 < r and l > 0 and r > 0:
-        n = fne[l+1:r]  # num (n)
-        fnb = fne[:l]  # fname no ()
-        fne = fnb
+        num = fne[l+1 : r]  # num (n)
+        fnb = fne[ : l]  # fname no ()
+        fneu = fnb
     #print('l '+str(l)+' r '+str(r))
     
+    #  clear prefixes, if already  --
+    if opt.prefix:
+        for r in ratings:
+            if fneu.startswith(r):
+                fneu = fneu[len(r)+1 : ]
+    
     #  get hash
-    if opts.size != 0:
-        hash = gethash(fpath)
+    if opt.h_size != 0:
+        hash = get_hash(fpath)
     else:
         hash = 0
 
-    #  file properties needed to be different for being unique
-    unique_file = (fne, ext, size, hash)
-    in_count = file_count.get(unique_file, 0)
-    file_count[unique_file] = in_count + 1  # inc count
+    #  cfile
+    cf = cFile(fpath, dir, fneu, fne, ext, size, hash)
+    unique_at = cf.unique_attrs()
+    in_count = file_count.get(unique_at, 0)
+    file_count[unique_at] = in_count + 1  # inc count
 
     if in_count == 0:
         unique = True
@@ -126,36 +189,25 @@ def process_file(dir, fname):
     else:
         unique = False
 
-    #  cfile
-    cf = cFile()
-    cf.fpath = fpath
-    cf.dir = dir
-    cf.fne = fne
-    cf.ext = ext
-    cf.size = size
-    cf.hash = hash
-    cf.unique = unique
-    
     #  file  info
-    #  align size right, unique +, fname
-    if opts.print_files:
-        #print(fne+'  s '+str(size)+' '+str(unique))
-        #print(fname+'  '+cf.fne+cf.ext+'  {:12d}'.format(cf.size)+'  u: '+str(unique))
+    if opt.print_files:
         if unique:
-            u = ' + '
+            u = ' # '
         else:
             u = ' - '
+        #  align size right, unique +, fname
         print('{:>12}'.format(str_size(size)) +
             ' ' + u + ' ' + fname)
 
     #  add
+    cf.unique = unique
     file_list.append(cf)
     return
 
 
 #  Main get loop
-#---------------------------------------------
-if not opts.recursive:
+#------------------------------------------------------------------------------------------
+if not opt.recursive:
     print(start_dir)
     files = os.listdir(start_dir)
 
@@ -169,7 +221,7 @@ else:
 
         #  each dir separate
         #  don't clear for across dirs
-        if not opts.across:
+        if not opt.across:
             file_list.clear
             file_count.clear
 
@@ -178,27 +230,61 @@ else:
             process_file(dir, fname)
 
 
-print('----- stats -----')
-print(' dirs:  ' + str(stats.all_dirs))
+print('----- Stats -----')
+print(' Dirs:  ' + str(stats.all_dirs))
 if stats.all_files > 0:
-    print('files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + ' / ' + str(stats.all_files))
+    print('Files:  {:.2f}'.format(100.0 * stats.left_files / stats.all_files) + '%  ' + str(stats.left_files) + '  /  ' + str(stats.all_files))
 if stats.all_size > 0:
-    print(' size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + ' / ' + str_size(stats.all_size) + ' B')
-print(' free:  ' + str_size(stats.all_size - stats.left_size) + ' B')
+    print(' Size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + '  /  ' + str_size(stats.all_size) + ' B')
+print(' Free:  ' + str_size(stats.all_size - stats.left_size) + ' B')
 
 
-#  delete, rename files
-if not opts.test:
-    print('----- deleting')
+#  Delete, Rename files
+if not test:
+    print('----- Executing')
+    dir = ''
     
     for f in file_list:
-        unique_file = (f.fne, f.ext, f.size, f.hash)
-        count = file_count.get(unique_file, 0)
-        if not f.unique:  # delete
-            if opts.print_files:
-                print(str(count)+' '+f.fpath)
-            #os.remove(f.path)
-        else:  # rename
-            os.path.split(f.fpath)
-            # dont rename to existing file
-            #os.rename(f.path, '`'+f.)
+        
+        if dir != f.dir:
+            dir = f.dir
+            print(dir)
+        
+        unique_at = f.unique_attrs()
+        count = file_count.get(unique_at, 0) + opt.offset
+        
+        if not f.unique:  #  delete
+            ch = '-'
+            name = f.fpath[ len(dir)+1 : ]
+            
+            if execute:
+                os.remove(f.path)
+        else:
+            #  rename with rating prefix
+            pref = ''
+            sufx = ''
+            if opt.prefix:
+                pref = ratings[min( max(0, count-2), len(ratings)-1 )]
+            if opt.suffix:
+                sufx = '_' + str(count)
+
+            ch = '#'  #  dont rename to existing file(s)
+            add = ''
+            while True:
+                new_file = pref + f.fne + sufx + add + f.ext
+                new_fpath = os.path.join(f.dir, new_file)
+                name = new_file
+                
+                if not os.path.exists(new_fpath):
+                    break
+                print('exists: ' + new_fpath)
+                if add == '':
+                    addd = 'a'
+                else:
+                    add[0] += 1
+
+            if execute:
+                os.rename(f.fpath, new_fpath)
+
+        if opt.print_files:
+            print('   ' + ch + '  ' + str(count) + '  ' + name)

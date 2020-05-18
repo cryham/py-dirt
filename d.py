@@ -47,7 +47,7 @@ op.add_option('-d', '--dir', dest='dir', help='Path. If not set, uses current', 
 opt_bool('-n', '--nosub', 'recursive',    'Don\'t check subdirs', 1)
 opt_bool('-a', '--across', 'across',      'Test duplicates across dirs', 0)
 op.add_option('-s', '--size', dest='h_size', type='int', default = -4096,
-            help='Size to read, -1 full (slow), 0 none, default -4096, - from end, + from beginning')
+            help='Size to read, 1 full (slow), 0 none, default -4096, - from end, + from beginning')
 
 opt_bool('-p', '--noprefix', 'prefix',
             'Add prefix rating symbol, from duplicate count ` _ ^ - , ) ( ! !!', 1)
@@ -75,10 +75,10 @@ if opt.dir == '':
     start_dir = os.getcwd()
 
     if debug:  #  test only
-        start_dir += '/test-dirs/1'
+        #start_dir += '/test-dirs/1'
         #start_dir += '/test-dirs/2'
         #start_dir += '/../dirtest/fmt'
-        #start_dir += '/../dirtest/zc'
+        start_dir += '/../dirtest/zc'
         #start_dir += '/../dirtest/zc2'
         #start_dir += '/../dirtest/zi'
 else:
@@ -127,11 +127,12 @@ def get_hash(file):
     hasher = hashlib.md5()
     with open(file, "rb") as f:
         if opt.h_size < -1:
-            f.seek(h_size, 2)
-        if opt.h_size == -1:  # read full
+            f.seek(-h_size, 2)
+        if h_size == 1:  # read full
             buf = f.read()
         else:
             buf = f.read(h_size)
+        #print(buf)
         hasher.update(buf)
     return hasher.hexdigest()
 
@@ -171,10 +172,7 @@ def process_file(dir, fname):
                 fneu = fneu[len(r)+1 : ]
     
     #  get hash
-    if opt.h_size != 0:
-        hash = get_hash(fpath)
-    else:
-        hash = 0
+    hash = get_hash(fpath) if  opt.h_size != 0  else 0
 
     #  cfile
     cf = cFile(fpath, dir, fneu, fne, ext, size, hash)
@@ -182,22 +180,17 @@ def process_file(dir, fname):
     in_count = file_count.get(unique_at, 0)
     file_count[unique_at] = in_count + 1  # inc count
 
-    if in_count == 0:
-        unique = True
+    unique = True if  in_count == 0  else False
+    if unique:
         stats.left_files += 1
         stats.left_size += size
-    else:
-        unique = False
 
     #  file  info
     if opt.print_files:
-        if unique:
-            u = ' # '
-        else:
-            u = ' - '
+        u = ' # ' if  unique  else ' - '
         #  align size right, unique +, fname
         print('{:>12}'.format(str_size(size)) +
-            ' ' + u + ' ' + fname)
+            ' ' + u + ' ' + fname)# + ' ' + hash)
 
     #  add
     cf.unique = unique
@@ -285,10 +278,7 @@ if not test:
                 if not os.path.exists(new_fpath):
                     break
                 print(tab + 'exists: ' + new_file)
-                if add == '':
-                    add = 'a'
-                else:
-                    add = chr(ord(add[0]) + 1)
+                add = 'a' if  add == ''  else chr(ord(add[0]) + 1)  # a,b,c..
 
             if execute:
                 try:

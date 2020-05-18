@@ -6,6 +6,7 @@ from optparse import OptionParser
 from utils import *
 
 
+#  Flags
 #---------------------------------------------
 test = False
 execute = True
@@ -75,10 +76,12 @@ if opt.dir == '':
     start_dir = os.getcwd()
 
     if debug:  #  test only
-        #start_dir += '/test-dirs/1'
-        #start_dir += '/test-dirs/2'
+        #start_dir += '/test-dirs/1simple'
+        #start_dir += '/test-dirs/2same-name'
+        start_dir += '/test-dirs/3two-dir'
+        #start_dir += '/test-dirs/4advanced'
         #start_dir += '/../dirtest/fmt'
-        start_dir += '/../dirtest/zc'
+        #start_dir += '/../dirtest/zc'
         #start_dir += '/../dirtest/zc2'
         #start_dir += '/../dirtest/zi'
 else:
@@ -114,9 +117,12 @@ class cFile:
         self.size = size    # file size B
         self.hash = hash    # hash from file contents, 0 if not used
         self.unique = True
-    def unique_attrs(self):
-        # file properties needed to be different for being unique
-        return (self.fneu, self.ext, self.size, self.hash)
+
+    def unique_attrs(self, across):
+        #  file properties needed to be different for file being unique
+        #return (self.ext, self.size, self.hash))  # test .. different names but same content
+        return ((self.fneu, self.ext, self.size, self.hash) if across
+            else (self.dir, self.fneu, self.ext, self.size, self.hash))
 
 stats = cStats()
 
@@ -125,13 +131,19 @@ stats = cStats()
 #---------------------------------------------
 def get_hash(file):
     hasher = hashlib.md5()
+    print(file+' '+str(opt.h_size))
     with open(file, "rb") as f:
-        if opt.h_size < -1:
-            f.seek(-h_size, 2)
-        if h_size == 1:  # read full
+        if opt.h_size < -1:  # from end
+            try:  # ?
+                f.seek(opt.h_size, os.SEEK_END)
+            except:
+                pass
             buf = f.read()
         else:
-            buf = f.read(h_size)
+            if h_size == 1:  # read full
+                buf = f.read()
+            else:  # from begin
+                buf = f.read(h_size)
         #print(buf)
         hasher.update(buf)
     return hasher.hexdigest()
@@ -176,7 +188,7 @@ def process_file(dir, fname):
 
     #  cfile
     cf = cFile(fpath, dir, fneu, fne, ext, size, hash)
-    unique_at = cf.unique_attrs()
+    unique_at = cf.unique_attrs(opt.across)
     in_count = file_count.get(unique_at, 0)
     file_count[unique_at] = in_count + 1  # inc count
 
@@ -215,7 +227,7 @@ else:
         #  each dir separate
         #  don't clear for across dirs
         if not opt.across:
-            file_list.clear
+            #file_list.clear
             file_count.clear
 
         files.sort()
@@ -244,7 +256,7 @@ if not test:
             dir = f.dir
             print(dir)
         
-        unique_at = f.unique_attrs()
+        unique_at = f.unique_attrs(opt.across)
         count = file_count.get(unique_at, 0) + opt.offset
         
         if not f.unique:  #  delete

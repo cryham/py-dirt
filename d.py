@@ -11,8 +11,8 @@ from utils import *
 test = False
 execute = True
 
-debug = True  # Dev Test
-#debug = False  # in Release !
+#debug = True  # Dev Test
+debug = False  # in Release !
 
 if debug:
     #test = True  # force -t for testing only
@@ -20,12 +20,13 @@ if debug:
 
 
 # Ratings  chars sorted
-#   all :  } { ` _ ^ ] [ @ = ; . - , ) ( ' & % # " !
 #   used:  ` _ ^ - , ) ( ! 
+#   all :  ` _ ^   ] [ @ = ;   . - , + ) (   ' & % # !
+# bad sort:  } { ~ $ . 
+# not on windows:  < > : " / \ | ? *
 
 # prefixes for filename, with more duplicates
-#ratings = ['`','``','_','^','-',',',',,',')','(','!','!!','!!!']  # 12
-ratings = ['`','_','^','-',',',')','(','!','!!']  # 9
+ratings = ['`','_','^','-',',','+',')','(','!','!!']  # 10
 
 
 #  Options
@@ -39,20 +40,20 @@ def opt_bool(sh,long, dest,help, default):
     else:
         op.add_option(sh,long, dest=dest, help=help, action='store_true', default=False)
 
-opt_bool('-t', '--test', 'test', 'Test only and show stats', 0)
-opt_bool('-o', '--opt',    'only',        'Only show options and quit', 0)
-opt_bool('-l', '--nolist', 'print_files', 'Don\'t list files only stats', 1)
-opt_bool('-x', '--noexec', 'noexecute',   'Don\'t excecute (delete or rename)', 0)
+opt_bool('-t', '--test',   'test',      'Test only and show stats', 0)
+opt_bool('-o', '--opt',    'only',      'Only show options and quit', 0)
+opt_bool('-l', '--list',   'list',      'List files, not just only stats', 0)
+opt_bool('-x', '--exec',   'noexecute', 'Excecute (delete or rename)', 0)
 
+opt_bool('-n', '--sub',    'recursive', 'Check subdirs', 1)
+opt_bool('-a', '--across', 'across',    'Test duplicates across dirs', 0)  # 1
 op.add_option('-d', '--dir', dest='dir', help='Path. If not set, uses current', default='')
-opt_bool('-n', '--nosub', 'recursive',    'Don\'t check subdirs', 1)
-opt_bool('-a', '--across', 'across',      'Test duplicates across dirs', 0)
 op.add_option('-s', '--size', dest='h_size', type='int', default = -4096,
             help='Size to read, 1 full (slow), 0 none, default -4096, - from end, + from beginning')
 
-opt_bool('-p', '--noprefix', 'prefix',
-            'Add prefix rating symbol, from duplicate count ` _ ^ - , ) ( ! !!', 1)
-opt_bool('-u', '--suffix', 'suffix',      'Add suffix ratings (1)..(9)', 0)
+opt_bool('-p', '--prefix', 'prefix',
+            'Add prefix rating symbol, from duplicate count  ` _ ^ - , ) ( ! !!', 1)
+opt_bool('-u', '--suffix', 'suffix',    'Add suffix ratings  _1 to _9', 0)
 op.add_option('-i', '--offset', dest='offset',
             help='Offset value to add to rating count', type='int', default = 0)
 
@@ -64,8 +65,7 @@ if opt.noexecute:
 if opt.test:
     test = True
 
-print('Options:  test '+yn(test)+'  execute '+yn(execute)+
-      '  list '+yn(opt.print_files)+'  prnt '+yn(opt.print_files))
+print('Options:  test '+yn(test)+'  execute '+yn(execute)+'  list '+yn(opt.list))
 print('  subdirs '+yn(opt.recursive)+'  across '+yn(opt.across)+'  size '+str(opt.h_size))
 print('  prefix '+yn(opt.prefix)+'  suffix '+yn(opt.suffix))
 
@@ -91,7 +91,8 @@ if opt.only:
     print('Path: ' + start_dir)
     exit(0)
 
-print('---------------------------------------------')
+if opt.list:
+    print('---------------------------------------------')
 
 
 #  Var
@@ -111,7 +112,7 @@ class cFile:
     def __init__(self, fpath, dir, fneu, fne, ext, size, hash):
         self.fpath = fpath  # full path with file
         self.dir = dir      # just dir path
-        self.fneu = fneu    # filename, no ext, no ratings for unique test
+        self.fneu = fneu    # filename, no ext, no ratings, for unique test
         self.fne = fne      # filename, no ext
         self.ext = ext      # file extension
         self.size = size    # file size B
@@ -131,13 +132,14 @@ stats = cStats()
 #---------------------------------------------
 def get_hash(file):
     hasher = hashlib.md5()
-    print(file+' '+str(opt.h_size))
+    #print(file+' '+str(opt.h_size))
     with open(file, "rb") as f:
         if opt.h_size < -1:  # from end
-            try:  # ?
+            try:  # fails: h_size > f.sizeof
                 f.seek(opt.h_size, os.SEEK_END)
             except:
                 pass
+                #print('xx')
             buf = f.read()
         else:
             if h_size == 1:  # read full
@@ -198,7 +200,7 @@ def process_file(dir, fname):
         stats.left_size += size
 
     #  file  info
-    if opt.print_files:
+    if opt.list:
         u = ' # ' if  unique  else ' - '
         #  align size right, unique +, fname
         print('{:>12}'.format(str_size(size)) +
@@ -221,6 +223,8 @@ if not opt.recursive:
         process_file(start_dir, fname)
 else:
     for dir, subdirs, files in os.walk(start_dir):
+        if dir.find('/.') != -1:  # skip hidden
+            continue
         print(dir)
         stats.all_dirs += 1
 
@@ -254,7 +258,8 @@ if not test:
         
         if dir != f.dir:
             dir = f.dir
-            print(dir)
+            if opt.list:
+                print(dir)
         
         unique_at = f.unique_attrs(opt.across)
         count = file_count.get(unique_at, 0) + opt.offset
@@ -265,7 +270,7 @@ if not test:
             
             if execute:
                 try:
-                    os.remove(f.path)
+                    os.remove(f.fpath)
                 except Exception as ex:
                     print(tab + 'delete failed: ' + f.fne + ' ' + str(ex))
         else:
@@ -298,5 +303,5 @@ if not test:
                 except Exception as ex:
                     print(tab + 'rename failed: ' + f.fne + ' ' + str(ex))
 
-        if opt.print_files:
+        if opt.list:
             print(tab + ch + '  ' + str(count) + '  ' + name)

@@ -11,8 +11,8 @@ from utils import *
 test = False
 execute = True
 
-debug = True  # Dev Test
-#debug = False  # in Release !
+#debug = True  # Dev Test
+debug = False  # in Release !
 
 
 # Ratings  chars sorted
@@ -77,14 +77,9 @@ if opt.dir == '':
     start_dir = os.getcwd()
 
     if debug:  #  test only
-        start_dir += '/test-dirs/1simple'
+        #start_dir += '/test-dirs/1simple'
         #start_dir += '/test-dirs/2same-name'
-        #start_dir += '/test-dirs/3two-dir'
-        #start_dir += '/test-dirs/4advanced'
-        #start_dir += '/../dirtest/fmt'
-        #start_dir += '/../dirtest/zc'
-        #start_dir += '/../dirtest/zc2'
-        #start_dir += '/../dirtest/zi'
+        start_dir += '/test-dirs/3two-dir'
 else:
     start_dir = opt.dir
 

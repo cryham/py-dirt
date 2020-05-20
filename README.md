@@ -8,33 +8,37 @@ Name comes from: Python Directory Tree.
 
 Options (`-l -d` etc.) are listed below for features.  
 This tool:
-- **Lists** files (use `-l`) in current directory (or specified after `-d`).  
+- **Lists** files (use `-l` to show) in current directory (or specified after `-d`).  
   By default recursively. Use -n to not check **subdirs**.
 - Gets for each file: its name, extension, size, and reads part of file to get **hash** value.  
-  By default size is 4kB from end (-4096). Use e.g. `-s 1024` for 1k from start. Or `-s 1` to read full files (slow).
-- File properties needed to be different for files being **unique** are:  
-  file name (without rating chars, e.g. added in previous run), extension, file size and hash value.  
-  *See `def unique_attrs` in `d.py` for detail*
+  By default size is 4kB from end (-4096).  
+  Use e.g. `-s 1024` for 1k from start. Or `-s 1` to read full files (slow).
+- Files are **unique** when at least one of their properties are:  
+  file name (without rating chars, e.g. added in previous run), extension, file size or hash value.  
+  *In `d.py` after `def unique_attrs`*
 - By default it checks for unique files **across** subdirs (use `-a` not to, i.e. only in each dir).
 - After that it writes **Stats**, showing Dirs and Files counts (left and all) and Size reduction.  
-  E.g. `Files:  50%  1 / 2` would mean that of 2 all files 1 is left and that's 50%. Same for size.
+  E.g. `Files:  33%  1 / 3` would mean that of all 3 files 1 is left and that's 33%. Same for size.
 - If used debug or test `-t` or no execute `-x` it will end now.
-- If not it starts **Executing** (i.e. deleting duplicated files and renaming those left with rating).
-- Rating can be added as prefix (default `-p` to disable) *at begin of filename*.  
-  For rating prefix characters see `ratings =` in `d.py`, ` _ ^ - , + ) ( ! !!  
-  Or as a numeric suffix *at end of filename*, from _1 to _9 and above (used with `-u`).
-- Rating can be offset by a value with `-i offset`.
+- If not, it starts **Executing**, i.e. deleting duplicated files and renaming those left with rating.
+- Rating can be added as prefix (default, use `-p` to disable) *at begin of filename*,  
+  increasing with duplicated files count `` ` `` _ ^ - , + ) ( ! !!  
+  *In `d.py` after `ratings =`*
+  Or as a numeric suffix *at end of filename*, from _1 to _9 and above (use with `-u`).
+- Rating can be offset by a value with `-i value`.
+- If new filename already exists, a suffix letter (`a` to `z`) will be added to filename.
 
-List format:  
-`file size    # or - (unique or deleted)   file name`  
+List format (header):  
+`file size | # or - (unique or deleted) | file name`  
 List format after Executing:  
-`# or - (unique or deleted)   duplicates count   new file name`
+`# or - (unique or deleted) | duplicates count | new file name`
 
 ## Testing
 
 For testing included examples (in `test-dirs/`)  
-just set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the tool works.  
-Those test examples have README.md files inside them explaining what happens.
+set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the tool works.  
+Uncomment (no #) just one of lines with `start_dir +=` for a test.
+Those test examples have README.md files inside their subdirs, explaining what happens.
 
 ## Usage
 
@@ -42,6 +46,6 @@ Start `./d.py -h` for help on options.
 
 Use `d -t` first, to test dir and show Stats (nothing executed). With also `-l` it will list files.  
 
-
 Using `d -o` will only show final options (Yes/No).  
 
+To change any option's default value change last 0 or 1 to opposite at end of line e.g. with `opt_bool('-t',`

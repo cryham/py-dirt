@@ -4,7 +4,7 @@ Python command line tool for finding and deleting duplicated files.
 Also renaming with added rating symbols, from count of duplicates.  
 Name comes from: Python Directory Tree.
 
-### How it works / Features
+## How it works and Features
 
 Options (`-l -d` etc.) are listed below for features.  
 This tool:
@@ -35,13 +35,13 @@ List format (header):
 List format after Executing:  
 `# or - (unique or deleted) | duplicates count | new file name`
 
-## Testing
+## Testing and Examples
 
 For testing included examples (in `test-dirs/`)  
 set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the tool works.  
 Uncomment (no #) just one of lines with `start_dir +=` for a test.
 
-Those test examples have README.md files inside subdirs, explaining what happens with tool output:  
+Those test **examples** have README.md files inside subdirs, explaining what happens with tool output:  
 [1simple](https://github.com/cryham/py-dirt/tree/master/test-dirs/1simple), 
 [2same-name](https://github.com/cryham/py-dirt/tree/master/test-dirs/2same-name), 
 [3two-dir](https://github.com/cryham/py-dirt/tree/master/test-dirs/3two-dir)

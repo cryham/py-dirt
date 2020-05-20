@@ -37,7 +37,7 @@ Files:  57.14%  4  /  7
  Size:  98.67%  819  /  830 B
  Free:  11 B
 ----- Executing
-/home/ch/_dev/py/dirt/test-dirs/1simple
+./test-dirs/1simple
    #  2  `a
    -  2  a(1)
    #  3  _b(2)

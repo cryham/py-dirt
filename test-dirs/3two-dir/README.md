@@ -37,7 +37,7 @@ Note: sizes and Stats will be slightly different because of this README.md file.
            7  -  d(1)
            2  #  d(2)
            2  -  d(3)
-/home/ch/_dev/py/dirt/test-dirs/3two-dir/bb
+./test-dirs/3two-dir/bb
           39  -  a(1).txt
           39  -  a.txt
           39  #  b(1).txt
@@ -49,7 +49,7 @@ Files:  42.11%  8  /  19
  Size:  82.99%  834  /  1k 005 B
  Free:  171 B
 ----- Executing
-/home/ch/_dev/py/dirt/test-dirs/3two-dir
+./test-dirs/3two-dir
    #  4  ^a(1).txt
    -  4  a.txt
    #  3  _c(2).c
@@ -63,7 +63,7 @@ Files:  42.11%  8  /  19
    -  2  d(1)
    #  2  `d(2)
    -  2  d(3)
-/home/ch/_dev/py/dirt/test-dirs/3two-dir/bb
+./test-dirs/3two-dir/bb
    -  4  a(1).txt
    -  4  a.txt
    #  2  `b(1).txt

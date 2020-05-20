@@ -2,10 +2,11 @@
 
 3 unique files
 
-a and a(1) are same, a(1) gets deleted, a is renamed to `a, lowest rating  
+a and a(1) are same,  
+so a(1) gets deleted, a is renamed to `a - lowest rating
 
 3 same b(2), b(2), b(3)  
-so b(2) stays, rest deleted, b(2) renamed to _b(2) 2nd rating 3x  
+so b(2) stays, rest deleted, b(2) renamed to _b(2) - 2nd rating 3x
 
 c is unique, nothing changes
 

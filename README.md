@@ -42,6 +42,9 @@ set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the 
 Uncomment (no #) just one of lines with `start_dir +=` for a test.
 
 Those test examples have README.md files inside subdirs, explaining what happens with tool output.
+[https://github.com/cryham/py-dirt/tree/master/test-dirs/1simple](1simple), 
+[https://github.com/cryham/py-dirt/tree/master/test-dirs/2same-name](2same-name), 
+[https://github.com/cryham/py-dirt/tree/master/test-dirs/3two-dir](3two-dir)
 
 ## Usage
 

@@ -5,10 +5,12 @@ One already existing `` `e `` file.
 e and e(1) are same, size 7 B  
 e(1) gets deleted, e would be renamed to `` `e `` but this exeist so it becomes `` `ea ``
 
-3 are same e(2), e(3), e(4), size 2 B  
-(same name as e and e(1) had but other size), so e(3) and e(4) get deleted and e(2) renamed to _e(2)
+3 are same: e(2), e(3), e(4), size 2 B  
+(same name as e and e(1) had but other size),  
+so e(3) and e(4) get deleted and e(2) renamed to _e(2)
 
-e(5) has same size as above 3 files, but other content so hash is different, thus e(5) is unique and stays
+e(5) has same size as above 3 files, but other content  
+so hash is different, thus e(5) is unique and stays
 
 f is unique, no changes
 

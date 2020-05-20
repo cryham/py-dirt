@@ -1,4 +1,4 @@
-### Test 2same-name
+## Test 2same-name
 
 One already existing `` `e `` file.
 
@@ -12,12 +12,14 @@ e(5) has same size as above 3 files, but other content so hash is different, thu
 
 f is unique, no changes
 
+## Listing:
 List format:  
-`file size    # or - (unique or deleted)   file name`  
+`file size  |  # or - (unique or deleted)  |  file name`  
 List format after Executing:  
-`# or - (unique or deleted)   duplicates count   new file name`
+`# or - (unique or deleted)  |  duplicates count  |  new file name`
 
-Listing:
+Note: sizes and Stats will be slightly different because of this README.md file.
+
 ```
            5  #  `e
            7  #  e
@@ -41,5 +43,3 @@ Files:  66.67%  6  /  9
    -  3  e(3)
    -  3  e(4)
 ```
-
-Note: sizes will be different because of this README.md file.

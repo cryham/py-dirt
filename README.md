@@ -24,7 +24,7 @@ This tool:
 - If not, it starts **Executing**, i.e. deleting duplicated files and renaming those left with rating.
 - If no execute `-x` is used it will show same output but won't execute.
 - Rating can be added as prefix (default, use `-p` to disable) *at begin of filename*,  
-  increasing with duplicated files count `` ` `` _ ^ - , + ) ( ! !!  
+  increasing with duplicated files count `` ` _ ^ - , + ) ( ! !! ``
   *In `d.py` after `ratings =`*
   Or as a numeric suffix *at end of filename*, from _1 to _9 and above (use with `-u`).
 - Rating can be offset by a value with `-i value`.

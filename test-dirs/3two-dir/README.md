@@ -1,8 +1,8 @@
-### Test 3two-dir
+## Test 3two-dir
 
-a.txt and a(1).txt are same, size 39 B, a.txt deleted, a(1).txt would be renamed to `a(1).txt,
+a.txt and a(1).txt are same, size 39 B, a.txt deleted, a(1).txt would be renamed to `a(1).txt,  
 but subdir `bb/` has also: a.txt and a(1).txt, same 39 B as before,  
-these are deleted (e.g. a(2).txt would be too or just a.txt)
+these are deleted (e.g. a(2).txt would be too or just a.txt)  
 this is with `across Yes`, with `-a` this won't happen.
 
 c.c, c(2).c and c(4).c are same, size 0B, so c(2).c stays renamed to _c(2).c and rest deleted
@@ -11,12 +11,14 @@ c(3).c, c(5).c, c(6).c and c(8).c are same, size 2B, so c(3).c stays renamed to 
 
 Rest of file are already rather obvious (d*, b*.txt).
 
+## Listing:
 List format:  
-`file size    # or - (unique or deleted)   file name`  
+`file size  |  # or - (unique or deleted)  |  file name`  
 List format after Executing:  
-`# or - (unique or deleted)   duplicates count   new file name`
+`# or - (unique or deleted)  |  duplicates count  |  new file name`
 
-Listing:
+Note: sizes and Stats will be slightly different because of this README.md file.
+
 ```
          742  #  README.md
           39  #  a(1).txt
@@ -64,5 +66,3 @@ Files:  42.11%  8  /  19
    #  2  `b(1).txt
    -  2  b(2).txt
 ```
-
-Note: sizes will be different because of this README.md file.

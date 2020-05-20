@@ -11,12 +11,8 @@ from utils import *
 test = False
 execute = True
 
-#debug = True  # Dev Test
-debug = False  # in Release !
-
-if debug:
-    #test = True  # force -t for testing only
-    execute = False  # don't execute
+debug = True  # Dev Test
+#debug = False  # in Release !
 
 
 # Ratings  chars sorted
@@ -65,6 +61,11 @@ if opt.noexecute:
 if opt.test:
     test = True
 
+if debug:
+    opt.list = True
+    #test = True  # force -t for testing only
+    execute = False  # don't execute
+
 print('Options:  test '+yn(test)+'  execute '+yn(execute)+'  list '+yn(opt.list))
 print('  subdirs '+yn(opt.recursive)+'  across '+yn(opt.across)+'  size '+str(opt.h_size))
 print('  prefix '+yn(opt.prefix)+'  suffix '+yn(opt.suffix))
@@ -76,9 +77,9 @@ if opt.dir == '':
     start_dir = os.getcwd()
 
     if debug:  #  test only
-        #start_dir += '/test-dirs/1simple'
+        start_dir += '/test-dirs/1simple'
         #start_dir += '/test-dirs/2same-name'
-        start_dir += '/test-dirs/3two-dir'
+        #start_dir += '/test-dirs/3two-dir'
         #start_dir += '/test-dirs/4advanced'
         #start_dir += '/../dirtest/fmt'
         #start_dir += '/../dirtest/zc'

@@ -18,9 +18,11 @@ This tool:
   *In `d.py` after `def unique_attrs`*
 - By default it checks for unique files **across** subdirs (use `-a` not to, i.e. only in each dir).
 - After that it writes **Stats**, showing Dirs and Files counts (left and all) and Size reduction.  
-  E.g. `Files:  33%  1 / 3` would mean that of all 3 files 1 is left and that's 33%. Same for size.
-- If used debug or test `-t` or no execute `-x` it will end now.
+  E.g. `Files:  33%  1 / 3` would mean that of all 3 files 1 is left and that's 33%.  
+  Same goes for `Size:`. It's in Bytes and sepearated with `g m k` (giga mega kilo, 1000 multipliers).
+- If used debug or test `-t` it will end now.
 - If not, it starts **Executing**, i.e. deleting duplicated files and renaming those left with rating.
+- If no execute `-x` is used it will show same output but won't execute.
 - Rating can be added as prefix (default, use `-p` to disable) *at begin of filename*,  
   increasing with duplicated files count `` ` `` _ ^ - , + ) ( ! !!  
   *In `d.py` after `ratings =`*

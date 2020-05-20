@@ -41,7 +41,7 @@ For testing included examples (in `test-dirs/`)
 set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the tool works.  
 Uncomment (no #) just one of lines with `start_dir +=` for a test.
 
-Those test examples have README.md files inside subdirs, explaining what happens with tool output.
+Those test examples have README.md files inside subdirs, explaining what happens with tool output:  
 [1simple](https://github.com/cryham/py-dirt/tree/master/test-dirs/1simple), 
 [2same-name](https://github.com/cryham/py-dirt/tree/master/test-dirs/2same-name), 
 [3two-dir](https://github.com/cryham/py-dirt/tree/master/test-dirs/3two-dir)

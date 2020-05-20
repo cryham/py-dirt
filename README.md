@@ -38,14 +38,16 @@ List format after Executing:
 For testing included examples (in `test-dirs/`)  
 set `debug = True` in `d.py` (and comment out `#debug = False`) to test how the tool works.  
 Uncomment (no #) just one of lines with `start_dir +=` for a test.
-Those test examples have README.md files inside their subdirs, explaining what happens.
+
+Those test examples have README.md files inside subdirs, explaining what happens with tool output.
 
 ## Usage
 
-Start `./d.py -h` for help on options.  
+Start `./d.py -h` for **help** on options.  
 
-Use `d -t` first, to test dir and show Stats (nothing executed). With also `-l` it will list files.  
+Use `./d.py -t` first to test dir and show Stats (nothing executed). With `-l` it will also list files.  
 
-Using `d -o` will only show final options (Yes/No).  
+Using `-o` will only show final options (Yes/No).  
 
-To change any option's default value change last 0 or 1 to opposite at end of line e.g. with `opt_bool('-t',`
+All options also have longer names e.g. `--list`.  
+To change any option's default value change last 0 or 1 to opposite at end of line e.g. with `opt_bool('-t',`  

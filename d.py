@@ -46,7 +46,7 @@ opt_bool('-l', '--list',   'list',      'List files, not just only stats', 0)
 opt_bool('-x', '--exec',   'noexecute', 'Excecute (delete or rename)', 0)
 
 opt_bool('-n', '--sub',    'recursive', 'Check subdirs', 1)
-opt_bool('-a', '--across', 'across',    'Test duplicates across dirs', 0)  # 1
+opt_bool('-a', '--across', 'across',    'Test duplicates across dirs', 1)  # 1
 op.add_option('-d', '--dir', dest='dir', help='Path. If not set, uses current', default='')
 op.add_option('-s', '--size', dest='h_size', type='int', default = -4096,
             help='Size to read, 1 full (slow), 0 none, default -4096, - from end, + from beginning')
@@ -215,7 +215,8 @@ def process_file(dir, fname):
 #  Main get loop
 #------------------------------------------------------------------------------------------
 if not opt.recursive:
-    print(start_dir)
+    if opt.list:
+        print(start_dir)
     files = os.listdir(start_dir)
 
     files.sort()
@@ -225,7 +226,9 @@ else:
     for dir, subdirs, files in os.walk(start_dir):
         if dir.find('/.') != -1:  # skip hidden
             continue
-        print(dir)
+
+        if opt.list:
+            print(dir)
         stats.all_dirs += 1
 
         #  each dir separate

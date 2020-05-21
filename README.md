@@ -14,12 +14,16 @@ This tool:
   By default size is 4kB from end (-4096).  
   Use e.g. `-s 1024` for 1k from start. Or `-s 1` to read full files (slow).
 - Files are **unique** when at least one of their properties are:  
-  file name (without rating chars, e.g. added in previous run), extension, file size or hash value.  
-  *In `d.py` after `def unique_attrs`*
-- By default it checks for unique files **across** subdirs (use `-a` not to, i.e. only in each dir).
+  cleaned file name, extension, file size or hash value.  
+  *In `d.py` after `def unique_attrs`*  
+  It is required for same files to have **(number)** in name, name before (number) must be the same.  
+  Also whole file name is cleaned from any characters after (number) and any rating prefix rating chars (e.g. added in previous run).  
+  For example (just for names) all here will be treated as same: `a`, `a(1)`, `a(2)`, ```a(2)^``, `!a(2)abc`
+- By default it checks for unique files **across** subdirs (use `-a` not to, i.e. only in each dir).  
 - After that it writes **Stats**, showing Dirs and Files counts (left and all) and Size reduction.  
   E.g. `Files:  33%  1 / 3` would mean that of all 3 files 1 is left and that's 33%.  
-  Same goes for `Size:`. It's in Bytes and sepearated with `g m k` (giga mega kilo, 1000 multipliers).
+  Same goes for `Size:`. It's in Bytes and sepearated with `g m k` (giga mega kilo, 1000 multipliers).  
+  *In `d.py` after `find (n) in name`*
 - If used debug or test `-t` it will end now.
 - If not, it starts **Executing**, i.e. deleting duplicated files and renaming those left with rating.
 - If no execute `-x` is used it will show same output but won't execute.
@@ -44,7 +48,8 @@ Uncomment (no #) just one of lines with `start_dir +=` for a test.
 Those test **examples** have README.md files inside subdirs, explaining what happens with tool output:  
 [1simple](https://github.com/cryham/py-dirt/tree/master/test-dirs/1simple), 
 [2same-name](https://github.com/cryham/py-dirt/tree/master/test-dirs/2same-name), 
-[3two-dir](https://github.com/cryham/py-dirt/tree/master/test-dirs/3two-dir)
+[3two-dir](https://github.com/cryham/py-dirt/tree/master/test-dirs/3two-dir), 
+[4clean-name](https://github.com/cryham/py-dirt/tree/master/test-dirs/4clean-name)
 
 ## Usage
 

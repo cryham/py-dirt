@@ -79,7 +79,8 @@ if opt.dir == '':
     if debug:  #  test only
         #start_dir += '/test-dirs/1simple'
         #start_dir += '/test-dirs/2same-name'
-        start_dir += '/test-dirs/3two-dir'
+        #start_dir += '/test-dirs/3two-dir'
+        start_dir += '/test-dirs/4clean-name'
 else:
     start_dir = opt.dir
 
@@ -165,6 +166,7 @@ def process_file(dir, fname):
     #print(fname + '  ' + str(size) + '  ' + fne + ' ' + ext)
 
     #  find (n) in name  --
+    #  this will ignore any suffix chars after (n) e.g. (n)ab^`
     l = fne.rfind('(')
     r = fne.rfind(')')
     fneu = fne
@@ -175,11 +177,11 @@ def process_file(dir, fname):
         fneu = fnb
     #print('l '+str(l)+' r '+str(r))
     
-    #  clear prefixes, if already  --
+    #  ignore rating prefixes, if already  --
     if opt.prefix:
         for r in ratings:
-            if fneu.startswith(r):
-                fneu = fneu[len(r)+1 : ]
+            while fneu.startswith(r):
+                fneu = fneu[len(r) : ]
     
     #  get hash
     hash = get_hash(fpath) if  opt.h_size != 0  else 0

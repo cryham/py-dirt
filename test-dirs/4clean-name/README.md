@@ -6,7 +6,7 @@ Names are treated the same after cleaning from:
 - rating prefixes `` ` _ ! `` etc.
 - and any chars after (number).
 
-This way 5 files `f`, `f(2)`, ````f(2)``, `!f(3)` and `f(2)abc` are all `f` named.  
+This way 5 files `f`, `f(2)`, ` ``f(2)`, `!f(3)` and `f(2)abc` are all `f` named.  
 Since `!f(3)` was  found first it will stay, with added `-` prefix (rating 5), and other files are deleted.
 
 The files `f(2)(2)` and `fa(2)` are unique (not `f` named) and not changed.

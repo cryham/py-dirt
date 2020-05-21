@@ -18,7 +18,7 @@ This tool:
   *In `d.py` after `def unique_attrs`*  
   It is required for same files to have **(number)** in name, name before (number) must be the same.  
   Also whole file name is cleaned from any characters after (number) and any rating prefix rating chars (e.g. added in previous run).  
-  For example (just for names) all here will be treated as same: `a`, `a(1)`, `a(2)`, ```a(2)^``, `!a(2)abc`
+  For example (just for names) all here will be treated as same: `a`, `a(1)`, `a(2)`, `` `a(2)^``, `!a(2)abc`
 - By default it checks for unique files **across** subdirs (use `-a` not to, i.e. only in each dir).  
 - After that it writes **Stats**, showing Dirs and Files counts (left and all) and Size reduction.  
   E.g. `Files:  33%  1 / 3` would mean that of all 3 files 1 is left and that's 33%.  

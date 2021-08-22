@@ -9,6 +9,7 @@ from utils import *
 #  Flags
 #---------------------------------------------
 test = False
+#test = True
 execute = True
 
 #debug = True  # Dev Test
@@ -23,12 +24,13 @@ debug = False  # in Release !
 
 # prefixes for filename, with more duplicates
 ratings = ['`','_','^','-',',','+',')','(','!','!!']  # 10
+tab = '   '
 
 
 #  Options
 #------------------------------------------------------------------------------------------
 op = OptionParser(description='Find and delete duplicated files. '+
-    'Rename with added rating from duplicates count.') #, usage='',epilog='')
+    'Rename with added rating from duplicates count. Detect extesions.') #, usage='',epilog='')
 
 def opt_bool(sh,long, dest,help, default):
     if default != 0:
@@ -40,6 +42,7 @@ opt_bool('-t', '--test',   'test',      'Test only and show stats', 0)
 opt_bool('-o', '--opt',    'only',      'Only show options and quit', 0)
 opt_bool('-l', '--list',   'list',      'List files, not just only stats', 0)
 opt_bool('-x', '--exec',   'noexecute', 'Excecute (delete or rename)', 0)
+opt_bool('-e', '--ext',    'autoext',   'Detect and set files extesions (few)', 1)
 
 opt_bool('-n', '--sub',    'recursive', 'Check subdirs', 1)
 opt_bool('-a', '--across', 'across',    'Test duplicates across dirs', 1)  # 1
@@ -68,7 +71,7 @@ if debug:
 
 print('Options:  test '+yn(test)+'  execute '+yn(execute)+'  list '+yn(opt.list))
 print('  subdirs '+yn(opt.recursive)+'  across '+yn(opt.across)+'  size '+str(opt.h_size))
-print('  prefix '+yn(opt.prefix)+'  suffix '+yn(opt.suffix))
+print('  ext '+yn(opt.autoext)+'  prefix '+yn(opt.prefix)+'  suffix '+yn(opt.suffix))
 
 
 #  Start dir
@@ -104,6 +107,7 @@ class cStats:
     all_size = 0
     left_files = 0  # left after deleting duplicates
     left_size = 0
+    wrong_ext = 0   # auto changed ext
 
 class cFile:
     def __init__(self, fpath, dir, fneu, fne, ext, size, hash):
@@ -210,6 +214,53 @@ def process_file(dir, fname):
     return
 
 
+#  Process 1 file ext
+#------------------------------------------------------------------------------------------
+def process_file_ext(dir, fname):
+    fpath = os.path.join(dir, fname)
+    if not os.path.isfile(fpath):
+        return
+    
+    size = os.path.getsize(fpath)
+    if size < 16:
+        return
+
+    fspl = os.path.splitext(fname)
+    fne = fspl[0]  # fname no ext
+    ext = fspl[1]
+    
+    ex = get_file_ext(fpath)
+    if ex == '?':
+        return  # unknown
+    
+    if ext == '' or ex != ext[1:]:
+        stats.wrong_ext += 1
+
+        if execute:
+            new_fpath = os.path.join(dir, fne+'.'+ex)
+            try:
+                os.rename(fpath, new_fpath)
+            except Exception as exc:
+                print(tab + 'rename ext failed: ' + fpath + ' ' + str(exc))
+
+
+#  Main loop for ext
+#------------------------------------------------------------------------------------------
+if opt.autoext:
+    if not opt.recursive:
+        files = os.listdir(start_dir)
+
+        for fname in files:
+            process_file_ext(start_dir, fname)
+    else:
+        for dir, subdirs, files in os.walk(start_dir):
+            if dir.find('/.') != -1:  # skip hidden
+                continue
+
+            for fname in files:
+                process_file_ext(dir, fname)
+
+
 #  Main get loop
 #------------------------------------------------------------------------------------------
 if not opt.recursive:
@@ -247,62 +298,66 @@ if stats.all_files > 0:
 if stats.all_size > 0:
     print(' Size:  {:.2f}'.format(100.0 * stats.left_size / stats.all_size) + '%  ' + str_size(stats.left_size) + '  /  ' + str_size(stats.all_size) + ' B')
 print(' Free:  ' + str_size(stats.all_size - stats.left_size) + ' B')
+if stats.wrong_ext > 0:
+    print('  Ext:  ' + str(stats.wrong_ext))
+
+
+if test:
+    exit(0)
 
 
 #  Delete, Rename files
-tab = '   '
-if not test:
-    print('----- Executing')
-    dir = ''
+print('----- Executing')
+dir = ''
+
+for f in file_list:
     
-    for f in file_list:
-        
-        if dir != f.dir:
-            dir = f.dir
-            if opt.list:
-                print(dir)
-        
-        unique_at = f.unique_attrs(opt.across)
-        count = file_count.get(unique_at, 0) + opt.offset
-        
-        if not f.unique:  #  delete
-            ch = '-'
-            name = f.fpath[ len(dir)+1 : ]
-            
-            if execute:
-                try:
-                    os.remove(f.fpath)
-                except Exception as ex:
-                    print(tab + 'delete failed: ' + f.fne + ' ' + str(ex))
-        else:
-            if count < 2:
-                continue
-            
-            #  rename with rating prefix
-            pref = ''
-            sufx = ''
-            if opt.prefix:
-                pref = ratings[min( max(0, count-2), len(ratings)-1 )]
-            if opt.suffix:
-                sufx = '_' + str(count)
-
-            ch = '#'  #  dont rename to existing file(s)
-            add = ''
-            while True:
-                new_file = pref + f.fne + sufx + add + f.ext
-                new_fpath = os.path.join(f.dir, new_file)
-                name = new_file
-                
-                if not os.path.exists(new_fpath):
-                    break
-                print(tab + 'exists: ' + new_file)
-                add = 'a' if  add == ''  else chr(ord(add[0]) + 1)  # a,b,c..
-
-            if execute:
-                try:
-                    os.rename(f.fpath, new_fpath)
-                except Exception as ex:
-                    print(tab + 'rename failed: ' + f.fne + ' ' + str(ex))
-
+    if dir != f.dir:
+        dir = f.dir
         if opt.list:
-            print(tab + ch + '  ' + str(count) + '  ' + name)
+            print(dir)
+    
+    unique_at = f.unique_attrs(opt.across)
+    count = file_count.get(unique_at, 0) + opt.offset
+    
+    if not f.unique:  #  delete
+        ch = '-'
+        name = f.fpath[ len(dir)+1 : ]
+        
+        if execute:
+            try:
+                os.remove(f.fpath)
+            except Exception as ex:
+                print(tab + 'delete failed: ' + f.fne + ' ' + str(ex))
+    else:
+        if count < 2:
+            continue
+        
+        #  rename with rating prefix
+        pref = ''
+        sufx = ''
+        if opt.prefix:
+            pref = ratings[min( max(0, count-2), len(ratings)-1 )]
+        if opt.suffix:
+            sufx = '_' + str(count)
+
+        ch = '#'  #  dont rename to existing file(s)
+        add = ''
+        while True:
+            new_file = pref + f.fne + sufx + add + f.ext
+            new_fpath = os.path.join(f.dir, new_file)
+            name = new_file
+            
+            if not os.path.exists(new_fpath):
+                break
+            print(tab + 'exists: ' + new_file)
+            add = 'a' if  add == ''  else chr(ord(add[0]) + 1)  # a,b,c..
+
+        if execute:
+            try:
+                os.rename(f.fpath, new_fpath)
+            except Exception as ex:
+                print(tab + 'rename failed: ' + f.fne + ' ' + str(ex))
+
+    if opt.list:
+        print(tab + ch + '  ' + str(count) + '  ' + name)
